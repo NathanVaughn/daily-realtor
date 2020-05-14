@@ -6,7 +6,7 @@ listings in nearby locations every day.
 ## Setup
 First, you'll need to install [Requests](https://requests.readthedocs.io/en/master/).
 
-Next, you're going to need a lot of environment variables. See [run.example.py](/blob/master/run.example.py)
+Next, you're going to need a lot of environment variables. See [run.example.py](run.example.py)
 
 ```bash
 RAPIDAPI_KEY # rapidapi.com API key: https://rapidapi.com/apidojo/api/realtor

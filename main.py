@@ -10,8 +10,10 @@ RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY")
 URL = "https://realtor.p.rapidapi.com/properties/v2/list-for-sale"
 LIMIT = 20
 
+
 def now():
     return datetime.datetime.utcnow()
+
 
 def main():
     message_text = "This is a test"
@@ -44,21 +46,29 @@ def main():
         # parse response
         for prop in data["properties"]:
             # test if last update time is sooner than one day ago
-            last_update = datetime.datetime.strptime(prop["last_update"], '%Y-%m-%dT%H:%M:%SZ')
+            last_update = datetime.datetime.strptime(
+                prop["last_update"], "%Y-%m-%dT%H:%M:%SZ"
+            )
             if last_update > now() - datetime.timedelta(days=1):
                 print("Property found that matches")
                 location_found = True
 
                 # get address
                 address = prop["address"]
-                pretty_address = "{}, {}, {} {}".format(address["line"], address["city"], address["state_code"], address["postal_code"])
+                pretty_address = "{}, {}, {} {}".format(
+                    address["line"],
+                    address["city"],
+                    address["state_code"],
+                    address["postal_code"],
+                )
 
                 # other info
                 pretty_url = prop["rdc_web_url"]
                 pretty_price = "${:,}".format(prop["price"])
 
-                message_text += " - {}: {}\n   {}\n".format(pretty_address, pretty_price, pretty_url)
-
+                message_text += " - {}: {}\n   {}\n".format(
+                    pretty_address, pretty_price, pretty_url
+                )
 
         if not location_found:
             print("No listings found")
