@@ -16,7 +16,7 @@ def now():
 
 
 def main():
-    message_text = "This is a test"
+    message_text = ""
 
     locations = os.getenv("LOCATIONS").split(":")
 
