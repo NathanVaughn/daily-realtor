@@ -31,3 +31,12 @@ jobs:
 
     - name: Run Code
       run: python3.8 main.py
+      env:
+        RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
+        LOCATIONS: ${{ secrets.LOCATIONS }}
+        DEST_EMAIL: ${{ secrets.DEST_EMAIL }}
+        SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+        SMTP_PORT: ${{ secrets.SMTP_PORT }}
+        SMTP_FROM: ${{ secrets.SMTP_FROM }}
+        SMTP_USER: ${{ secrets.SMTP_USER }}
+        SMTP_PASS: ${{ secrets.SMTP_PASS }}
