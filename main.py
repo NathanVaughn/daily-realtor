@@ -2,7 +2,6 @@ import os
 import smtplib, ssl
 import requests
 import datetime
-import json
 from email.message import EmailMessage
 
 RAPIDAPI_HOST = "realtor.p.rapidapi.com"
