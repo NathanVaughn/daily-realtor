@@ -43,31 +43,32 @@ def main():
         data = response.json()
 
         # parse response
-        for prop in data["properties"]:
-            # test if last update time is sooner than one day ago
-            last_update = datetime.datetime.strptime(
-                prop["last_update"], "%Y-%m-%dT%H:%M:%SZ"
-            )
-            if last_update > now() - datetime.timedelta(days=1):
-                print("Property found that matches")
-                location_found = True
-
-                # get address
-                address = prop["address"]
-                pretty_address = "{}, {}, {} {}".format(
-                    address["line"],
-                    address["city"],
-                    address["state_code"],
-                    address["postal_code"],
+        if "properties" in data:
+            for prop in data["properties"]:
+                # test if last update time is sooner than one day ago
+                last_update = datetime.datetime.strptime(
+                    prop["last_update"], "%Y-%m-%dT%H:%M:%SZ"
                 )
+                if last_update > now() - datetime.timedelta(days=1):
+                    print("Property found that matches")
+                    location_found = True
 
-                # other info
-                pretty_url = prop["rdc_web_url"]
-                pretty_price = "${:,}".format(prop["price"])
+                    # get address
+                    address = prop["address"]
+                    pretty_address = "{}, {}, {} {}".format(
+                        address["line"],
+                        address["city"],
+                        address["state_code"],
+                        address["postal_code"],
+                    )
 
-                message_text += " - {}: {}\n   {}\n".format(
-                    pretty_address, pretty_price, pretty_url
-                )
+                    # other info
+                    pretty_url = prop["rdc_web_url"]
+                    pretty_price = "${:,}".format(prop["price"])
+
+                    message_text += " - {}: {}\n   {}\n".format(
+                        pretty_address, pretty_price, pretty_url
+                    )
 
         if not location_found:
             print("No listings found")
