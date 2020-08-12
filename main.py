@@ -2,6 +2,7 @@ import os
 import smtplib, ssl
 import requests
 import datetime
+import sys
 from email.message import EmailMessage
 
 RAPIDAPI_HOST = "realtor.p.rapidapi.com"
@@ -12,6 +13,35 @@ LIMIT = 20
 
 def now():
     return datetime.datetime.utcnow()
+
+def send_email(message_text):
+    # send email
+    print("Sending email to {}".format(os.getenv("DEST_EMAIL")))
+    try:
+        # prepare sever connection
+        context = ssl.create_default_context()
+        server = smtplib.SMTP(os.getenv("SMTP_SERVER"), int(os.getenv("SMTP_PORT")))
+        server.starttls(context=context)
+        server.login(os.getenv("SMTP_USER"), os.getenv("SMTP_PASS"))
+
+        # build message
+        message = EmailMessage()
+        message.set_content(message_text)
+        message["Subject"] = "Daily Realtor Update: {}".format(
+            now().strftime("%Y-%m-%d")
+        )
+        message["From"] = "Daily Realtor <{}>".format(os.getenv("SMTP_FROM"))
+        message["To"] = os.getenv("DEST_EMAIL")
+
+        # send message
+        server.send_message(message)
+
+    except Exception as e:
+        print("Unable to send email")
+        print(e)
+
+    finally:
+        server.quit()
 
 
 def main():
@@ -40,7 +70,13 @@ def main():
         headers = {"x-rapidapi-host": RAPIDAPI_HOST, "x-rapidapi-key": RAPIDAPI_KEY}
         print(querystring)
         response = requests.request("GET", URL, headers=headers, params=querystring)
-        data = response.json()
+
+        try:
+            data = response.json()
+        except json.decoder.JSONDecodeError:
+            print("JSON Decode Error")
+            print(response)
+            data = []
 
         # parse response
         if "properties" in data:
@@ -78,36 +114,14 @@ def main():
         # add line break between locations
         message_text += "\n"
 
-    # send email
-    print("Sending email to {}".format(os.getenv("DEST_EMAIL")))
-    try:
-        # prepare sever connection
-        context = ssl.create_default_context()
-        server = smtplib.SMTP(os.getenv("SMTP_SERVER"), int(os.getenv("SMTP_PORT")))
-        server.starttls(context=context)
-        server.login(os.getenv("SMTP_USER"), os.getenv("SMTP_PASS"))
-
-        # build message
-        message = EmailMessage()
-        message.set_content(message_text)
-        message["Subject"] = "Daily Realtor Update: {}".format(
-            now().strftime("%Y-%m-%d")
-        )
-        message["From"] = "Daily Realtor <{}>".format(os.getenv("SMTP_FROM"))
-        message["To"] = os.getenv("DEST_EMAIL")
-
-        # send message
-        server.send_message(message)
-
-    except Exception as e:
-        print("Unable to send email")
-        print(e)
-
-    finally:
-        server.quit()
+    send_email(message_text)
 
     print("Done!")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except:
+        send_email("Something went wrong.")
+        sys.exit(1)
