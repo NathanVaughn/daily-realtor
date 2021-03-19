@@ -1,9 +1,13 @@
-import os
-import smtplib, ssl
-import requests
 import datetime
+import json
+import os
+import smtplib
+import ssl
 import sys
+import traceback
 from email.message import EmailMessage
+
+import requests
 
 RAPIDAPI_HOST = "realtor.p.rapidapi.com"
 RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY")
@@ -13,6 +17,7 @@ LIMIT = 20
 
 def now():
     return datetime.datetime.utcnow()
+
 
 def send_email(message_text):
     # send email
@@ -122,6 +127,7 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except:
+    except Exception as e:
+        traceback.print_exc()
         send_email("Something went wrong.")
         sys.exit(1)
