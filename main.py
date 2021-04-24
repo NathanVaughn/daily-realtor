@@ -87,9 +87,14 @@ def main():
         if "properties" in data:
             for prop in data["properties"]:
                 # test if last update time is sooner than one day ago
-                last_update = datetime.datetime.strptime(
-                    prop["last_update"], "%Y-%m-%dT%H:%M:%SZ"
-                )
+                try:
+                    last_update = datetime.datetime.strptime(
+                        prop["last_update"], "%Y-%m-%dT%H:%M:%SZ"
+                    )
+                except ValueError:
+                    last_update = datetime.datetime.strptime(
+                        prop["last_update"], "%Y-%m-%d"
+                    )
                 if last_update > now() - datetime.timedelta(days=1):
                     print("Property found that matches")
                     location_found = True
