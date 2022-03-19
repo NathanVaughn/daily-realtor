@@ -1,42 +1,40 @@
 import datetime
-import json
 import os
 import smtplib
 import ssl
-import sys
-import traceback
 from email.message import EmailMessage
 
 import requests
 
 RAPIDAPI_HOST = "realtor.p.rapidapi.com"
-RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY")
-URL = "https://realtor.p.rapidapi.com/properties/v2/list-for-sale"
+RAPIDAPI_KEY = os.environ["RAPIDAPI_KEY"]
+URL = f"https://{RAPIDAPI_HOST}/properties/v2/list-for-sale"
 LIMIT = 20
 
 
-def now():
-    return datetime.datetime.utcnow()
+def now() -> datetime.datetime:
+    return datetime.datetime.now(datetime.timezone.utc)
 
 
-def send_email(message_text):
+def send_email(message_text: str):
     # send email
-    print("Sending email to {}".format(os.getenv("DEST_EMAIL")))
+    print(f'Sending email to {os.environ["DEST_EMAIL"]}')
+    print(f"Message:\n {message_text}")
+
+    server = smtplib.SMTP(os.environ["SMTP_SERVER"], int(os.environ["SMTP_PORT"]))
+
     try:
         # prepare sever connection
         context = ssl.create_default_context()
-        server = smtplib.SMTP(os.getenv("SMTP_SERVER"), int(os.getenv("SMTP_PORT")))
         server.starttls(context=context)
-        server.login(os.getenv("SMTP_USER"), os.getenv("SMTP_PASS"))
+        server.login(os.environ["SMTP_USER"], os.environ["SMTP_PASS"])
 
         # build message
         message = EmailMessage()
         message.set_content(message_text)
-        message["Subject"] = "Daily Realtor Update: {}".format(
-            now().strftime("%Y-%m-%d")
-        )
-        message["From"] = "Daily Realtor <{}>".format(os.getenv("SMTP_FROM"))
-        message["To"] = os.getenv("DEST_EMAIL")
+        message["Subject"] = f'Daily Realtor Update: {now().strftime("%Y-%m-%d")}'
+        message["From"] = f'Daily Realtor <{os.environ["SMTP_FROM"]}>'
+        message["To"] = os.environ["DEST_EMAIL"]
 
         # send message
         server.send_message(message)
@@ -44,7 +42,6 @@ def send_email(message_text):
     except Exception as e:
         print("Unable to send email")
         print(e)
-
     finally:
         server.quit()
 
@@ -52,12 +49,13 @@ def send_email(message_text):
 def main():
     message_text = ""
 
-    locations = os.getenv("LOCATIONS").split(":")
+    # locations is expected to be a list of City,State seperated by semicolons
+    locations = os.environ["LOCATIONS"].split(":")
 
     for location in locations:
-        print(location)
+        print(f"Checking location: {location}")
         location_found = False
-        message_text += "{}: \n".format(location)
+        message_text += f"{location}: \n"
 
         # get location info
         (city, state) = location.split(",")
@@ -73,51 +71,39 @@ def main():
 
         # send request
         headers = {"x-rapidapi-host": RAPIDAPI_HOST, "x-rapidapi-key": RAPIDAPI_KEY}
-        print(querystring)
         response = requests.request("GET", URL, headers=headers, params=querystring)
 
-        try:
-            data = response.json()
-        except json.decoder.JSONDecodeError:
-            print("JSON Decode Error")
-            print(response)
-            data = []
-
         # parse response
-        if "properties" in data:
-            for prop in data["properties"]:
-                # test if last update time is sooner than one day ago
-                try:
-                    last_update = datetime.datetime.strptime(
-                        prop["last_update"], "%Y-%m-%dT%H:%M:%SZ"
-                    )
-                except ValueError:
-                    last_update = datetime.datetime.strptime(
-                        prop["last_update"], "%Y-%m-%d"
-                    )
-                if last_update > now() - datetime.timedelta(days=1):
-                    print("Property found that matches")
-                    location_found = True
+        data = response.json()
+        print(f"{len(data['properties'])} properties found")
 
-                    # get address
-                    address = prop["address"]
-                    pretty_address = "{}, {}, {} {}".format(
-                        address["line"],
-                        address["city"],
-                        address["state_code"],
-                        address["postal_code"],
-                    )
+        for prop in data["properties"]:
+            # test if last update time is sooner than one day ago
+            try:
+                last_update = datetime.datetime.strptime(
+                    prop["last_update"], "%Y-%m-%dT%H:%M:%SZ"
+                )
+            except ValueError:
+                last_update = datetime.datetime.strptime(
+                    prop["last_update"], "%Y-%m-%d"
+                )
 
-                    # other info
-                    pretty_url = prop["rdc_web_url"]
-                    pretty_price = "${:,}".format(prop["price"])
+            if last_update > now() - datetime.timedelta(days=1):
+                location_found = True
 
-                    message_text += " - {}: {}\n   {}\n".format(
-                        pretty_address, pretty_price, pretty_url
-                    )
+                # get address
+                address = prop["address"]
+                pretty_address = f'{address["line"]}, {address["city"]}, {address["state_code"]} {address["postal_code"]}'
+
+                # other info
+                pretty_url = prop["rdc_web_url"]
+                pretty_price = "${:,}".format(prop["price"])
+
+                message_text += (
+                    f" - {pretty_address}: {pretty_price}\n   {pretty_url}\n"
+                )
 
         if not location_found:
-            print("No listings found")
             # put nothing if no new listings
             message_text += "No new listings\n"
 
@@ -126,13 +112,6 @@ def main():
 
     send_email(message_text)
 
-    print("Done!")
-
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        traceback.print_exc()
-        send_email("Something went wrong.")
-        sys.exit(1)
+    main()
