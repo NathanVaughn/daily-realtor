@@ -13,7 +13,7 @@ LIMIT = 20
 
 
 def now() -> datetime.datetime:
-    return datetime.datetime.now(datetime.timezone.utc)
+    return datetime.datetime.now()
 
 
 def send_email(message_text: str):
