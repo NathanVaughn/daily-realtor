@@ -16,7 +16,7 @@ def now() -> datetime.datetime:
     return datetime.datetime.now()
 
 
-def send_email(message_text: str):
+def send_email(message_text: str) -> None:
     # send email
     print(f'Sending email to {os.environ["DEST_EMAIL"]}')
     print(f"Message:\n {message_text}")
@@ -46,7 +46,7 @@ def send_email(message_text: str):
         server.quit()
 
 
-def main():
+def main() -> None:
     message_text = ""
 
     # locations is expected to be a list of City,State seperated by semicolons
@@ -75,7 +75,6 @@ def main():
 
         # parse response
         data = response.json()
-        print(f"{len(data['properties'])} properties found")
 
         for prop in data["properties"]:
             # test if last update time is sooner than one day ago
@@ -110,6 +109,7 @@ def main():
         # add line break between locations
         message_text += "\n"
 
+    print("==========================================================")
     send_email(message_text)
 
 
