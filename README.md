@@ -4,7 +4,11 @@ This is a script for my mom to send her new Realtor.com
 listings in nearby locations every day.
 
 ## Setup
-First, you'll need to install [Requests](https://requests.readthedocs.io/en/master/).
+
+```bash
+python -m pip install pip wheel --upgrade
+python -m pip install -r requirements.txt
+```
 
 Next, you're going to need a lot of environment variables. See [run.example.py](run.example.py)
 
