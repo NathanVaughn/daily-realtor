@@ -77,6 +77,10 @@ def main() -> None:
         data = response.json()
 
         for prop in data["properties"]:
+            # skip if no last update
+            if "last_update" not in prop:
+                continue
+
             # test if last update time is sooner than one day ago
             try:
                 last_update = datetime.datetime.strptime(
@@ -110,7 +114,8 @@ def main() -> None:
         message_text += "\n"
 
     print("==========================================================")
-    send_email(message_text)
+    print(message_text)
+    # send_email(message_text)
 
 
 if __name__ == "__main__":
