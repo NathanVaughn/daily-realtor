@@ -29,7 +29,7 @@ jobs:
         run: python main.py
         env:
           RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
-          LOCATIONS: ${{ secrets.LOCATIONS }}
+          LOCATIONS: ${{ vars.LOCATIONS }}
           DEST_EMAIL: ${{ secrets.DEST_EMAIL }}
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
