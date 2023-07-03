@@ -115,7 +115,7 @@ def main() -> None:
 
     print("==========================================================")
     print(message_text)
-    # send_email(message_text)
+    send_email(message_text)
 
 
 if __name__ == "__main__":
