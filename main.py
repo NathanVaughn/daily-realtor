@@ -74,9 +74,12 @@ def main() -> None:
         response = requests.request("GET", URL, headers=headers, params=querystring)
 
         # parse response
-        data = response.json()
+        try:
+            data = response.json()
+        except requests.exceptions.JSONDecodeError:
+            data = {}
 
-        for prop in data["properties"]:
+        for prop in data.get("properties", []):
             # skip if no last update
             if "last_update" not in prop:
                 continue
