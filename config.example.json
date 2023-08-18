@@ -1,0 +1,25 @@
+{
+    "RAPIDAPI_KEY": "apikeygoeshere",
+    "LOCATIONS": [
+        {
+            "CITY": "Austin",
+            "STATE": "TX"
+        },
+        {
+            "CITY": "Dallas",
+            "STATE": "TX"
+        },
+        {
+            "CITY": "Des Moines",
+            "STATE": "IA"
+        }
+    ],
+    "DEST_EMAIL": "me@myemail.com",
+    "SMTP": {
+        "SERVER": "smtp.sendgrid.net",
+        "PORT": "587",
+        "FROM": "daily-realtor@mydomain.com",
+        "USER": "apikey",
+        "PASS": "apikeygoeshere"
+    }
+}

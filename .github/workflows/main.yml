@@ -14,10 +14,10 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Setup Python 3.10
+      - name: Setup Python 3.11
         uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: "3.11"
           cache: pip
 
       - name: Install Requirements
@@ -28,11 +28,4 @@ jobs:
       - name: Run Code
         run: python main.py
         env:
-          RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
-          LOCATIONS: ${{ vars.LOCATIONS }}
-          DEST_EMAIL: ${{ secrets.DEST_EMAIL }}
-          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
-          SMTP_PORT: ${{ secrets.SMTP_PORT }}
-          SMTP_FROM: ${{ secrets.SMTP_FROM }}
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          CONFIG_DATA: ${{ secrets.CONFIG_DATA }}

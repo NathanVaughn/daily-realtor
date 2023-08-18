@@ -160,3 +160,5 @@ cython_debug/
 #.idea/
 
 run.py
+config.json
+data.json
