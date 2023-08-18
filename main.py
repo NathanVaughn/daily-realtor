@@ -55,7 +55,8 @@ def send_email(config_data: dict, message_text: str) -> None:
     Send an email with the given message
     """
 
-    print(f'Sending email to {config_data["DEST_EMAIL"]}')
+    print("Sending email")
+    print(message_text)
 
     server = smtplib.SMTP(config_data["SMTP"]["SERVER"], config_data["SMTP"]["PORT"])
 
