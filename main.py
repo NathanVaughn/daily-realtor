@@ -7,7 +7,6 @@ import ssl
 from dataclasses import dataclass
 from email.message import EmailMessage
 
-import prettytable
 import requests
 
 
@@ -57,9 +56,6 @@ def send_email(config_data: dict, message_text: str) -> None:
     """
 
     print(f'Sending email to {config_data["DEST_EMAIL"]}')
-    print(
-        f"Message:\n==========================================================\n {message_text}"
-    )
 
     server = smtplib.SMTP(config_data["SMTP"]["SERVER"], config_data["SMTP"]["PORT"])
 
@@ -134,18 +130,48 @@ def create_property_table(property_data_list: list[PropertyData]) -> str:
     """
     Create a string represenation of a table of data
     """
-    location_table = prettytable.PrettyTable()
-    location_table.field_names = [
-        "Price",
-        "Address",
-        "Square Feet",
-        "Beds/Baths",
-        "URL",
-        "Listed",
-    ]
-    location_table.align = "r"
-    location_table.align["URL"] = "l"  # type: ignore
-    location_table.set_style(prettytable.SINGLE_BORDER)
+    # location_table = prettytable.PrettyTable()
+    # location_table.field_names = [
+    #     "Price",
+    #     "Address",
+    #     "Square Feet",
+    #     "Beds/Baths",
+    #     "URL",
+    #     "Listed",
+    # ]
+    # location_table.align = "r"
+    # location_table.align["URL"] = "l"  # type: ignore
+    # location_table.set_style(prettytable.SINGLE_BORDER)
+
+    # for pd in property_data_list:
+    #     # check if items are known
+    #     sqft = pd.sqft
+    #     if sqft is None or sqft == 0:
+    #         sqft = "???"
+
+    #     beds = pd.beds
+    #     if beds is None or beds == 0:
+    #         beds = "?"
+
+    #     baths = pd.baths
+    #     if baths is None or baths == 0:
+    #         baths = "?"
+
+    #     # add row to table
+    #     location_table.add_row(
+    #         [
+    #             pd.price,
+    #             f"{pd.street_address}, {pd.city}, {pd.state} {pd.zipcode}",
+    #             sqft,
+    #             f"{beds}/{baths}",
+    #             pd.url,
+    #             pd.listed.isoformat(),
+    #         ],
+    #         divider=False,
+    #     )
+    # return location_table.get_string()
+
+    output_str = ""
 
     for pd in property_data_list:
         # check if items are known
@@ -162,18 +188,21 @@ def create_property_table(property_data_list: list[PropertyData]) -> str:
             baths = "?"
 
         # add row to table
-        location_table.add_row(
-            [
-                pd.price,
-                f"{pd.street_address}, {pd.city}, {pd.state} {pd.zipcode}",
-                sqft,
-                f"{beds}/{baths}",
-                pd.url,
-                pd.listed.isoformat(),
-            ],
-            divider=False,
-        )
-    return location_table.get_string()
+        # location_table.add_row(
+        #     [
+        #         pd.price,
+        #         f"{pd.street_address}, {pd.city}, {pd.state} {pd.zipcode}",
+        #         sqft,
+        #         f"{beds}/{baths}",
+        #         pd.url,
+        #         pd.listed.isoformat(),
+        #     ],
+        #     divider=False,
+        # )
+
+        output_str = f"{output_str} - {pd.street_address}, {pd.city}, {pd.state} {pd.zipcode}: {pd.price}\n   {beds} beds, {baths} baths, {sqft} sqft\n   {pd.url}\n\n"
+
+    return output_str
 
 
 def main() -> None:
@@ -219,7 +248,7 @@ def main() -> None:
         #     response_json = json.load(fp)
 
         location_message = create_property_table(parse_property_list(response_json))
-        message_text = f"{message_text}{location_text}:\n{location_message}\n"
+        message_text = f"{message_text}{''.join(['='*50])}\n\n{location_text}:\n\n{location_message}\n"
 
     send_email(config_data, message_text)
 
