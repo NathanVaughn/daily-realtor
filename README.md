@@ -10,7 +10,7 @@ python -m pip install pip wheel --upgrade
 python -m pip install -r requirements.txt
 ```
 
-Next, you're going to need a lot of environment variables. See [config.example.json](config.example.json)
+Next, you need to set up a config file. See [config.example.json](config.example.json)
 Create a copy of this file named `config.json`. You can now run
 
 ```bash
