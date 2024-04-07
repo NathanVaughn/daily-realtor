@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from email.message import EmailMessage
 
 import requests
-
+import argparse
 
 @dataclass
 class PropertyData:
@@ -56,7 +56,6 @@ def send_email(config_data: dict, message_text: str) -> None:
     """
 
     print("Sending email")
-    print(message_text)
 
     server = smtplib.SMTP(config_data["SMTP"]["SERVER"], config_data["SMTP"]["PORT"])
 
@@ -206,7 +205,7 @@ def create_property_table(property_data_list: list[PropertyData]) -> str:
     return output_str
 
 
-def main() -> None:
+def main(dry: bool) -> None:
     # load the config
     if os.path.isfile(CONFIG_FILE):
         with open(CONFIG_FILE, "r") as fp:
@@ -251,8 +250,15 @@ def main() -> None:
         location_message = create_property_table(parse_property_list(response_json))
         message_text = f"{message_text}{''.join(['='*50])}\n\n{location_text}:\n\n{location_message}\n"
 
-    send_email(config_data, message_text)
+    print(message_text)
+
+    if not dry:
+        send_email(config_data, message_text)
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dry", action="store_true", help="Run without sending email")
+    args = parser.parse_args()
+
+    main(args.dry)
