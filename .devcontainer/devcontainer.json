@@ -20,5 +20,8 @@
                 "rangav.vscode-thunder-client"
             ]
         }
-    }
+    },
+    "mounts": [
+        "source=devcontainer-profile,target=/home/vscode/,type=volume"
+    ]
 }
