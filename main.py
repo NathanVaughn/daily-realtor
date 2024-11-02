@@ -1,3 +1,4 @@
+import argparse
 import datetime
 import json
 import math
@@ -7,8 +8,24 @@ import ssl
 from dataclasses import dataclass
 from email.message import EmailMessage
 
+import pydantic
 import requests
-import argparse
+
+
+class SMTPConfig(pydantic.BaseModel):
+    SERVER: str
+    PORT: int
+    USER: str
+    PASS: str
+    FROM_EMAIL: str
+
+
+class Config(pydantic.BaseModel):
+    RAPIDAPI_KEY: str
+    ZIP_CODES: list[str]
+    DESTINATION_EMAIL: str
+    SMTP: SMTPConfig
+
 
 @dataclass
 class PropertyData:
@@ -24,13 +41,24 @@ class PropertyData:
     listed: datetime.datetime
 
 
-# https://rapidapi.com/apidojo/api/realtor/
+# https://rapidapi.com/apidojo/api/realty-in-us/playground/apiendpoint_c4d477ea-7292-48fa-9dfe-f093f2adf8ac
 
-RAPIDAPI_HOST = "realtor.p.rapidapi.com"
+RAPIDAPI_HOST = "realty-in-us.p.rapidapi.com"
 URL = f"https://{RAPIDAPI_HOST}/properties/v3/list"
-LIMIT = 20
-CONFIG_FILE = os.path.join(os.path.abspath(os.path.dirname(__file__)), "config.json")
+LIMIT = 20  # items per response
+
+# current time
 NOW = datetime.datetime.now()
+
+# load the config
+_config_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), "config.json")
+if os.path.isfile(_config_file):
+    with open(_config_file, "r") as fp:
+        _config_data = json.load(fp)
+else:
+    _config_data = json.loads(os.environ["CONFIG_DATA"])
+
+CONFIG = Config(**_config_data)
 
 
 def optimistic_float_to_int(value: float) -> int | float:
@@ -50,27 +78,27 @@ def parse_datetime(value: str) -> datetime.datetime:
     return datetime.datetime.fromisoformat(value)
 
 
-def send_email(config_data: dict, message_text: str) -> None:
+def send_email(message_text: str) -> None:
     """
     Send an email with the given message
     """
 
     print("Sending email")
 
-    server = smtplib.SMTP(config_data["SMTP"]["SERVER"], config_data["SMTP"]["PORT"])
+    server = smtplib.SMTP(CONFIG.SMTP.SERVER, CONFIG.SMTP.PORT)
 
     try:
         # prepare sever connection
         context = ssl.create_default_context()
         server.starttls(context=context)
-        server.login(config_data["SMTP"]["USER"], config_data["SMTP"]["PASS"])
+        server.login(CONFIG.SMTP.USER, CONFIG.SMTP.PASS)
 
         # build message
         message = EmailMessage()
         message.set_content(message_text)
         message["Subject"] = f'Daily Realtor Update: {NOW.strftime("%Y-%m-%d")}'
-        message["From"] = f'Daily Realtor <{config_data["SMTP"]["FROM"]}>'
-        message["To"] = config_data["DEST_EMAIL"]
+        message["From"] = f"Daily Realtor <{CONFIG.SMTP.FROM_EMAIL}>"
+        message["To"] = CONFIG.DESTINATION_EMAIL
 
         # send message
         server.send_message(message)
@@ -206,54 +234,45 @@ def create_property_table(property_data_list: list[PropertyData]) -> str:
 
 
 def main(dry: bool) -> None:
-    # load the config
-    if os.path.isfile(CONFIG_FILE):
-        with open(CONFIG_FILE, "r") as fp:
-            config_data = json.load(fp)
-    else:
-        config_data = json.loads(os.environ["CONFIG_DATA"])
-
     message_text = ""
 
-    for location in config_data["LOCATIONS"]:
-        location_text = f"{location['CITY']}, {location['STATE']}"
-
-        print(f"Checking location: {location_text}")
+    for zip_code in CONFIG.ZIP_CODES:
+        print(f"Checking zip code: {zip_code}")
 
         # build parameters
         body_query = {
             "sort": {"direction": "desc", "field": "list_date"},
-            "city": location["CITY"],
-            "limit": LIMIT,
+            "postal_code": zip_code,
+            "limit": LIMIT,  # items per response
             "offset": "0",
-            "state_code": location["STATE"],
             "status": ["for_sale", "ready_to_build"],
         }
 
         # send request
         headers = {
             "x-rapidapi-host": RAPIDAPI_HOST,
-            "x-rapidapi-key": config_data["RAPIDAPI_KEY"],
+            "x-rapidapi-key": CONFIG.RAPIDAPI_KEY,
         }
         response = requests.post(URL, headers=headers, json=body_query)
 
         # parse response
         try:
             response_json = response.json()
-        except requests.exceptions.JSONDecodeError:
+        except requests.exceptions.JSONDecodeError as e:
+            print(f"Error decoding JSON response, skipping: {e}")
             continue
 
-        # # test info
-        # with open("data.json", "r") as fp:
-        #     response_json = json.load(fp)
+        # test info
+        # with open("response.json", "w") as fp:
+        #     json.dump(response_json, fp, indent=4)
 
         location_message = create_property_table(parse_property_list(response_json))
-        message_text = f"{message_text}{''.join(['='*50])}\n\n{location_text}:\n\n{location_message}\n"
+        message_text = f"{message_text}{''.join(['='*50])}\n\nZip Code {zip_code}:\n\n{location_message}\n"
 
     print(message_text)
 
     if not dry:
-        send_email(config_data, message_text)
+        send_email(message_text)
 
 
 if __name__ == "__main__":
