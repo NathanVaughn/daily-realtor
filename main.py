@@ -82,8 +82,11 @@ def send_email(message_text: str) -> None:
     """
     Send an email with the given message
     """
+    # sanitize destination email
+    prefix, domain = CONFIG.DESTINATION_EMAIL.split("@")
+    starred_prefix = prefix[0] + ("*" * (len(prefix) - 2)) + prefix[-1]
 
-    print("Sending email")
+    print(f"Sending email from {CONFIG.SMTP.FROM_EMAIL} to {starred_prefix}@{domain}")
 
     server = smtplib.SMTP(CONFIG.SMTP.SERVER, CONFIG.SMTP.PORT)
 
