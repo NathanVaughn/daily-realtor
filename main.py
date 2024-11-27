@@ -139,13 +139,20 @@ def parse_property_list(data: dict) -> list[PropertyData]:
         if baths_half is None:
             baths_half = 0
 
+        # apparently sometimes this can be None
+        price = property["list_price"]
+        if price is None:
+            price = "$???"
+        else:
+            price = "${:,}".format(price)
+
         output.append(
             PropertyData(
                 street_address=address["line"],
                 city=address["city"],
                 state=address["state_code"],
                 zipcode=address["postal_code"],
-                price="${:,}".format(property["list_price"]),
+                price=price,
                 sqft=description["sqft"],
                 beds=description["beds"],
                 baths=optimistic_float_to_int(baths_full + 0.5 * baths_half),
