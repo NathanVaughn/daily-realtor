@@ -27,6 +27,7 @@ jobs:
         with:
           prune-cache: false
           cache-python: true
+          ignore-nothing-to-cache: true
 
       - name: Run Code
         run: uv run main.py
