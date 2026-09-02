@@ -4,7 +4,9 @@
     description     = "Daily property listings for my mom"
     readme          = "README.md"
     requires-python = ">=3.13"
-    dependencies    = ["pydantic==2.13.4", "requests==2.34.2"]
+    dependencies    = ["pydantic>=2.13.4", "requests>=2.34.2"]
 
-[tool.uv]
-    package = false
+[[tool.uv.index]]
+    name    = "pkgs"
+    url     = "https://pkgs.nathanv.app/pypi/simple"
+    default = true
